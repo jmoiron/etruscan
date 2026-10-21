@@ -1,0 +1,23 @@
+[package]
+name = "etruscan-ffi"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82"
+description = "C ABI shim over exiftool-rs for the etruscan Go package"
+license = "GPL-3.0-or-later"
+publish = false
+
+[lib]
+name = "etruscan"
+crate-type = ["staticlib"]
+
+[dependencies]
+exiftool-rs = { git = "https://github.com/Le-Syl21/exiftool-rs", rev = "c6080f5697ec8844ae2c4397e72b40021d1e93b2" }
+serde_json = "1"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+panic = "unwind"
+strip = true

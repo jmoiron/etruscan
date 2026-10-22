@@ -52,7 +52,10 @@ for _, t := range m.Tags {
 ```
 
 `ReadBytes(data, name, opts)` does the same for data in memory; `name` is used
-for its extension when detecting the file type.
+for its extension when detecting the file type. `FromReader(r, name, opts)`
+reads an `io.Reader` to the end and does the same, so a decoder can sit in
+front of it, for example a `gzip.Reader` over a compressed file. The data is
+held in memory, which `Tag.Bytes` relies on below.
 
 ### Tags
 

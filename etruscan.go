@@ -371,6 +371,19 @@ func ReadBytes(data []byte, name string, opts *Options) (*Metadata, error) {
 	return m, err
 }
 
+// FromReader reads r to the end and extracts metadata from what it returned,
+// as ReadBytes does; name is used (for its extension) to help detect the file
+// type and may be empty. The data is held in memory, and the Metadata keeps it
+// so that Tag.Bytes can read embedded images later. Wrap r to decode on the
+// way in, for instance a gzip.Reader for a compressed corpus.
+func FromReader(r io.Reader, name string, opts *Options) (*Metadata, error) {
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	return ReadBytes(data, name, opts)
+}
+
 // ReadBinary returns the bytes of the named binary tags, for instance
 // "ThumbnailImage", "PreviewImage" or "JpgFromRaw" (what exiftool -b prints).
 // Names may be group-qualified ("IFD1:ThumbnailImage"). Normal reads report

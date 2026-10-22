@@ -3,6 +3,7 @@ package etruscan
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -10,18 +11,8 @@ import (
 	"reflect"
 	"runtime"
 	"testing"
+	"testing/iotest"
 )
-
-const corpus = "../comp/testdata/corpus"
-
-func corpusFiles(t *testing.T) []string {
-	t.Helper()
-	files, _ := filepath.Glob(filepath.Join(corpus, "*"))
-	if len(files) == 0 {
-		t.Skip("no corpus at " + corpus)
-	}
-	return files
-}
 
 func TestVersion(t *testing.T) {
 	if Version() == "" {
@@ -42,7 +33,7 @@ func TestParity(t *testing.T) {
 	if _, err := exec.LookPath("exiftool"); err != nil {
 		t.Skip("exiftool not installed")
 	}
-	for _, f := range corpusFiles(t) {
+	for _, f := range testFiles(t) {
 		t.Run(filepath.Base(f), func(t *testing.T) {
 			m, err := Read(f, nil)
 			if err != nil {
@@ -79,7 +70,7 @@ func TestParity(t *testing.T) {
 }
 
 func TestReadBytes(t *testing.T) {
-	f := filepath.Join(corpus, "canon-6d-macau.jpg")
+	f := testFile(t, "canon-6d-macau.jpg")
 	data, err := os.ReadFile(f)
 	if err != nil {
 		t.Skip("corpus missing")
@@ -94,13 +85,44 @@ func TestReadBytes(t *testing.T) {
 	}
 }
 
+func TestFromReader(t *testing.T) {
+	for _, name := range testNames(t) {
+		t.Run(name, func(t *testing.T) {
+			r := testReader(t, name)
+			defer r.Close()
+			m, err := FromReader(r, name, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(m.Tags) == 0 {
+				t.Fatal("no tags")
+			}
+			// same result as reading the bytes directly
+			b, err := ReadBytes(testBytes(t, name), name, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(m.Map(), b.Map()) {
+				t.Fatal("FromReader and ReadBytes disagree")
+			}
+			// embedded images are read back from the retained data
+			if pt, ok := m.Get("PreviewImage"); ok {
+				if _, err := pt.Bytes(); err != nil {
+					t.Fatalf("Bytes: %v", err)
+				}
+			}
+		})
+	}
+	// a failing reader is reported, not swallowed
+	if _, err := FromReader(iotest.ErrReader(errors.New("boom")), "x.jpg", nil); err == nil {
+		t.Fatal("expected read error")
+	}
+}
+
 func TestWriteRoundTrip(t *testing.T) {
 	for _, name := range []string{"canon-6d-macau.jpg", "canon-400d.tiff", "canon-rawstudio-thumbnail.png"} {
 		t.Run(name, func(t *testing.T) {
-			src := filepath.Join(corpus, name)
-			if _, err := os.Stat(src); err != nil {
-				t.Skip("corpus missing")
-			}
+			src := testFile(t, name)
 			dst := filepath.Join(t.TempDir(), name)
 			edits := []Edit{Set("XMP:Title", "Etruscan Test"), Set("Artist", "Jane")}
 			// exiftool-rs cannot write XMP into TIFF; it must say so.
@@ -142,10 +164,7 @@ func TestWriteRoundTrip(t *testing.T) {
 }
 
 func TestNoPrintConversion(t *testing.T) {
-	f := filepath.Join(corpus, "canon-6d-macau.jpg")
-	if _, err := os.Stat(f); err != nil {
-		t.Skip("corpus missing")
-	}
+	f := testFile(t, "canon-6d-macau.jpg")
 	full, err := Read(f, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -181,10 +200,7 @@ func TestNoPrintConversion(t *testing.T) {
 }
 
 func TestTagValue(t *testing.T) {
-	f := filepath.Join(corpus, "canon-6d-macau.jpg")
-	if _, err := os.Stat(f); err != nil {
-		t.Skip("corpus missing")
-	}
+	f := testFile(t, "canon-6d-macau.jpg")
 	m, err := Read(f, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -229,10 +245,7 @@ func TestTagValue(t *testing.T) {
 
 // Tags must not alias the C buffer that was freed after the read.
 func TestMetadataSurvivesGC(t *testing.T) {
-	f := filepath.Join(corpus, "canon-6d-macau.jpg")
-	if _, err := os.Stat(f); err != nil {
-		t.Skip("corpus missing")
-	}
+	f := testFile(t, "canon-6d-macau.jpg")
 	first, err := Read(f, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -261,10 +274,7 @@ func TestReadBinary(t *testing.T) {
 	if _, err := exec.LookPath("exiftool"); err != nil {
 		t.Skip("no system exiftool")
 	}
-	f := filepath.Join(corpus, "canon-400d.cr2")
-	if _, err := os.Stat(f); err != nil {
-		t.Skip("corpus missing")
-	}
+	f := testFile(t, "canon-400d.cr2")
 	got, err := ReadBinary(f, "ThumbnailImage", "PreviewImage", "Nonexistent")
 	if err != nil {
 		t.Fatal(err)
@@ -301,7 +311,7 @@ func TestReadBinary(t *testing.T) {
 
 func TestTagBytes(t *testing.T) {
 	var n int
-	for _, f := range corpusFiles(t) {
+	for _, f := range testFiles(t) {
 		for _, opts := range []*Options{{Duplicates: true}, {Duplicates: true, NoPrintConversion: true}} {
 			m, err := Read(f, opts)
 			if err != nil {

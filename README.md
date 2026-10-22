@@ -1,5 +1,7 @@
 # etruscan
 
+<img width="1024" height="631" alt="67733b43dbc39f001db678cd" src="https://github.com/user-attachments/assets/4bc0f9af-1a3c-4b69-9862-af83b9606fa3" />
+
 Go bindings for [exiftool-rs](https://github.com/jmoiron/exiftool-rs), a Rust
 port of [ExifTool](https://exiftool.org). The Rust library is linked statically
 through cgo, so there is no `exiftool` process to spawn and no Perl runtime to

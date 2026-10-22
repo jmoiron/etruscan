@@ -35,6 +35,7 @@ func TestParity(t *testing.T) {
 	}
 	for _, f := range testFiles(t) {
 		t.Run(filepath.Base(f), func(t *testing.T) {
+			t.Parallel()
 			m, err := Read(f, nil)
 			if err != nil {
 				t.Fatal(err)

@@ -1,6 +1,6 @@
 // Package etruscan is a Go wrapper around exiftool-rs, a Rust port of
-// ExifTool. The Rust library is linked statically through cgo; build it with
-// `make rust` before building Go code that imports this package.
+// ExifTool. The Rust library is linked statically through cgo; run `make` in
+// this directory before building Go code that imports this package.
 package etruscan
 
 /*

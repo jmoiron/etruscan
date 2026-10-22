@@ -1,2 +1,3 @@
 lib/
 rust/target/
+etruscan_build.c

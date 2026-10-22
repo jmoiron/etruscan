@@ -29,9 +29,15 @@ _, err = etruscan.Write("in.jpg", "out.jpg", []etruscan.Edit{
     etruscan.Set("XMP:Title", "Hello"),
     etruscan.Delete("Artist"),
 }, nil)
+
+// Embedded images are not read up front (the tag reports only its length).
+// Bytes reads them on demand, straight from the offset Read already found.
+if t, ok := m.Get("PreviewImage"); ok {
+    jpg, err := t.Bytes()
+}
 ```
 
-`ReadBytes` reads from memory. `Options` exposes duplicates, fast-scan,
+`ReadBytes` reads from memory. `Options` exposes duplicates,
 embedded-document extraction, MWG, geolocation and `-struct` output. Each tag
 carries the print value, the raw value, and a typed JSON value.
 

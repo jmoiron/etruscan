@@ -12,7 +12,7 @@ name = "etruscan"
 crate-type = ["staticlib"]
 
 [dependencies]
-exiftool-rs = { git = "https://github.com/jmoiron/exiftool-rs", rev = "bfd3372e78dfd7c2fd3009f2bcc8c621a9d56257" }
+exiftool-rs = { git = "https://github.com/jmoiron/exiftool-rs", rev = "d5a4526373d0e2c685247e7b5f42b18e8b00a9b9" }
 serde_json = "1"
 
 [profile.release]

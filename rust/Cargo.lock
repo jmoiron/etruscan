@@ -112,7 +112,7 @@ dependencies = [
 [[package]]
 name = "exiftool-rs"
 version = "0.13.0"
-source = "git+https://github.com/jmoiron/exiftool-rs?rev=bfd3372e78dfd7c2fd3009f2bcc8c621a9d56257#bfd3372e78dfd7c2fd3009f2bcc8c621a9d56257"
+source = "git+https://github.com/jmoiron/exiftool-rs?rev=d5a4526373d0e2c685247e7b5f42b18e8b00a9b9#d5a4526373d0e2c685247e7b5f42b18e8b00a9b9"
 dependencies = [
  "brotli",
  "byteorder",
